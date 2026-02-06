@@ -249,6 +249,12 @@
             <input type="number" id="objectDiameter" value="50" step="1" oninput="calculate()">
         </div>
 
+        <div class="form-group">
+            <label for="safetyMargin">Safety Margin (% of width)</label>
+            <input type="number" id="safetyMargin" value="5" min="0" max="50" step="1" oninput="calculate()">
+            <small style="color:#64748b; font-size:0.75rem;">Space to leave at detector edges</small>
+        </div>
+
         <div id="autoControls">
             <div class="checkbox-group" id="doubleWideContainer">
                 <input type="checkbox" id="doubleWide" onchange="calculate()">
@@ -431,7 +437,6 @@
             currentSystem = { ...systems[val] };
         }
 
-        // Handle Double Wide Visibility
         const display = currentSystem.allowDoubleWide ? 'flex' : 'none';
         dwContainerAuto.style.display = display;
         dwContainerManual.style.display = display;
@@ -457,7 +462,7 @@
             allowDoubleWide: document.getElementById('c_allowDW').checked,
             overlapPx: 100
         };
-        loadSystemPreset(); // Refresh UI visibility logic
+        loadSystemPreset(); 
     }
 
     function handleFileUpload(input) {
@@ -508,6 +513,11 @@
     // --- 4. The Mathematics (Solver) ---
     function calculate() {
         const objDiameter = parseFloat(document.getElementById('objectDiameter').value);
+        // NEW: Get Margin
+        let marginPercent = parseFloat(document.getElementById('safetyMargin').value) || 0;
+        if (marginPercent < 0) marginPercent = 0;
+        if (marginPercent > 90) marginPercent = 90; // Sanity check
+
         if (!objDiameter || objDiameter <= 0) return;
 
         const warnEl = document.getElementById('warnAlert');
@@ -517,7 +527,7 @@
         warnEl.textContent = "";
         errEl.textContent = "";
 
-        // Determine detector width based on mode and checkbox
+        // Determine detector width
         let isDoubleWide = false;
         if (calculationMode === 'auto') {
             isDoubleWide = document.getElementById('doubleWide').checked;
@@ -525,7 +535,6 @@
             isDoubleWide = document.getElementById('manualDoubleWide').checked;
         }
 
-        // Validate double wide availability
         if (isDoubleWide && !currentSystem.allowDoubleWide) isDoubleWide = false;
 
         let activePixels = currentSystem.widthPx;
@@ -533,6 +542,10 @@
             activePixels = (currentSystem.widthPx * 2) - (currentSystem.overlapPx || 100);
         }
         const physDetWidth = activePixels * currentSystem.pixelPitch;
+        
+        // NEW: Calculate Usable Width (Reducing the effective detector size by margin)
+        // If 10% margin, we only use 90% of the detector for the object.
+        const usableDetWidth = physDetWidth * (1 - (marginPercent / 100));
 
         let targetSOD, targetSDD, finalMag;
 
@@ -541,7 +554,8 @@
             // AUTO MODE LOGIC
             const forceMaxSdd = document.getElementById('forceMaxSdd').checked;
             
-            const maxMagFOV = physDetWidth / objDiameter;
+            // Mag is limited by USABLE width now
+            const maxMagFOV = usableDetWidth / objDiameter;
             const maxMagSys = currentSystem.maxSDD / currentSystem.minSOD;
 
             let limitingFactor = ""; 
@@ -575,15 +589,13 @@
             targetSOD = parseFloat(document.getElementById('manualSOD').value);
             targetSDD = parseFloat(document.getElementById('manualSDD').value);
 
-            // Basic validation
             if (!targetSOD || !targetSDD) return;
 
-            // Travel Validation
             if (targetSOD < currentSystem.minSOD || targetSOD > currentSystem.maxSOD) {
                 warnEl.innerHTML += `Warning: SOD is outside system limits (${currentSystem.minSOD} - ${currentSystem.maxSOD} mm).<br>`;
                 warnEl.classList.add('visible');
             }
-            if (targetSDD > currentSystem.maxSDD) { // Usually strict max
+            if (targetSDD > currentSystem.maxSDD) { 
                  warnEl.innerHTML += `Warning: SDD exceeds system max (${currentSystem.maxSDD} mm).<br>`;
                  warnEl.classList.add('visible');
             }
@@ -597,7 +609,8 @@
 
         // --- COMMON RESULTS ---
         const effPixel = currentSystem.pixelPitch / finalMag;
-        const fov = physDetWidth / finalMag; 
+        const fov = physDetWidth / finalMag; // Total FOV
+        const usableFOV = usableDetWidth / finalMag; // Usable FOV
 
         // Collision Check
         if (targetSOD + (objDiameter/2) > targetSDD) {
@@ -605,10 +618,17 @@
             errEl.classList.add('visible');
         }
 
-        // FOV Check (Manual Mode Only - did user cut off the object?)
-        if (calculationMode === 'manual' && objDiameter > fov) {
-             errEl.textContent = `Error: Object (${objDiameter}mm) is larger than Field of View (${fov.toFixed(1)}mm).`;
-             errEl.classList.add('visible');
+        // FOV Check (Manual Mode)
+        if (calculationMode === 'manual') {
+            // Check against Usable FOV to warn about margin violation, 
+            // or absolute FOV to warn about clipping.
+            if (objDiameter > fov) {
+                 errEl.textContent = `Error: Object (${objDiameter}mm) is larger than Field of View (${fov.toFixed(1)}mm).`;
+                 errEl.classList.add('visible');
+            } else if (objDiameter > usableFOV) {
+                 warnEl.innerHTML += `Warning: Object fits, but violates your ${marginPercent}% safety margin.<br>`;
+                 warnEl.classList.add('visible');
+            }
         }
 
         // Update UI
