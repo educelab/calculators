@@ -347,17 +347,6 @@
     let calculationMode = 'auto'; // 'auto' or 'manual'
 
     const systems = {
-        generic: {
-            name: "Generic Lab Micro-CT",
-            pixelPitch: 0.127,
-            widthPx: 2048,
-            minSOD: 20,
-            maxSOD: 800,
-            minSDD: 300,
-            maxSDD: 1000,
-            allowDoubleWide: true,
-            overlapPx: 150
-        },
         waygatem300: {
             name: "Waygate V|tome|x M300",
             pixelPitch: 0.1,
@@ -383,7 +372,9 @@
         custom: {} 
     };
 
-    let currentSystem = { ...systems.generic };
+    // Initialize with the first available system in the list
+    const firstSystemKey = Object.keys(systems)[0];
+    let currentSystem = { ...systems[firstSystemKey] };
 
     // --- 2. Mode Switching ---
     function setMode(mode) {
@@ -401,9 +392,15 @@
     }
 
     // --- 3. Dropdown & Input Handling ---
-    function populateDropdown(selectedId = 'generic') {
+    function populateDropdown(selectedId = null) {
         const select = document.getElementById('systemSelect');
         select.innerHTML = ''; 
+        
+        // Default to the first key if nothing selected
+        if (!selectedId) {
+            selectedId = Object.keys(systems)[0];
+        }
+
         for (const [key, sys] of Object.entries(systems)) {
             if (key === 'custom') continue; 
             const option = document.createElement('option');
@@ -415,6 +412,7 @@
         customOpt.value = 'custom';
         customOpt.text = 'Manual Configuration...';
         select.appendChild(customOpt);
+        
         select.value = selectedId;
     }
 
@@ -426,11 +424,11 @@
         
         if (val === 'custom') {
             customDiv.style.display = 'block';
-            document.getElementById('c_pitch').value = currentSystem.pixelPitch || systems.generic.pixelPitch;
-            document.getElementById('c_width').value = currentSystem.widthPx || systems.generic.widthPx;
-            document.getElementById('c_minSOD').value = currentSystem.minSOD || systems.generic.minSOD;
-            document.getElementById('c_maxSOD').value = currentSystem.maxSOD || systems.generic.maxSOD;
-            document.getElementById('c_maxSDD').value = currentSystem.maxSDD || systems.generic.maxSDD;
+            document.getElementById('c_pitch').value = currentSystem.pixelPitch || systems[Object.keys(systems)[0]].pixelPitch;
+            document.getElementById('c_width').value = currentSystem.widthPx || systems[Object.keys(systems)[0]].widthPx;
+            document.getElementById('c_minSOD').value = currentSystem.minSOD || systems[Object.keys(systems)[0]].minSOD;
+            document.getElementById('c_maxSOD').value = currentSystem.maxSOD || systems[Object.keys(systems)[0]].maxSOD;
+            document.getElementById('c_maxSDD').value = currentSystem.maxSDD || systems[Object.keys(systems)[0]].maxSDD;
             document.getElementById('c_allowDW').checked = currentSystem.hasOwnProperty('allowDoubleWide') ? currentSystem.allowDoubleWide : true;
         } else {
             customDiv.style.display = 'none';
@@ -513,10 +511,9 @@
     // --- 4. The Mathematics (Solver) ---
     function calculate() {
         const objDiameter = parseFloat(document.getElementById('objectDiameter').value);
-        // NEW: Get Margin
         let marginPercent = parseFloat(document.getElementById('safetyMargin').value) || 0;
         if (marginPercent < 0) marginPercent = 0;
-        if (marginPercent > 90) marginPercent = 90; // Sanity check
+        if (marginPercent > 90) marginPercent = 90; 
 
         if (!objDiameter || objDiameter <= 0) return;
 
@@ -543,8 +540,7 @@
         }
         const physDetWidth = activePixels * currentSystem.pixelPitch;
         
-        // NEW: Calculate Usable Width (Reducing the effective detector size by margin)
-        // If 10% margin, we only use 90% of the detector for the object.
+        // Use margin
         const usableDetWidth = physDetWidth * (1 - (marginPercent / 100));
 
         let targetSOD, targetSDD, finalMag;
@@ -554,7 +550,6 @@
             // AUTO MODE LOGIC
             const forceMaxSdd = document.getElementById('forceMaxSdd').checked;
             
-            // Mag is limited by USABLE width now
             const maxMagFOV = usableDetWidth / objDiameter;
             const maxMagSys = currentSystem.maxSDD / currentSystem.minSOD;
 
@@ -609,8 +604,8 @@
 
         // --- COMMON RESULTS ---
         const effPixel = currentSystem.pixelPitch / finalMag;
-        const fov = physDetWidth / finalMag; // Total FOV
-        const usableFOV = usableDetWidth / finalMag; // Usable FOV
+        const fov = physDetWidth / finalMag; 
+        const usableFOV = usableDetWidth / finalMag;
 
         // Collision Check
         if (targetSOD + (objDiameter/2) > targetSDD) {
@@ -620,8 +615,6 @@
 
         // FOV Check (Manual Mode)
         if (calculationMode === 'manual') {
-            // Check against Usable FOV to warn about margin violation, 
-            // or absolute FOV to warn about clipping.
             if (objDiameter > fov) {
                  errEl.textContent = `Error: Object (${objDiameter}mm) is larger than Field of View (${fov.toFixed(1)}mm).`;
                  errEl.classList.add('visible');
@@ -710,8 +703,8 @@
 
     // Init
     window.addEventListener('resize', calculate);
-    populateDropdown(); 
-    loadSystemPreset(); 
+    populateDropdown(); // Populate using default (first) key
+    loadSystemPreset(); // Load that system
 
 </script>
 
