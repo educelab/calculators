@@ -526,17 +526,13 @@
 
         if (!objDiameter || objDiameter <= 0) return;
 
-        const warnEl = document.getElementById('warnAlert');
-        const errEl = document.getElementById('errAlert');
-        warnEl.classList.remove('visible');
-        errEl.classList.remove('visible');
-        warnEl.textContent = "";
-        errEl.textContent = "";
+        // Container for alerts
+        let errorMsgs = [];
+        let warnMsgs = [];
 
-        // NEW: Check system max diameter limit
+        // 1. Check system max diameter limit
         if (currentSystem.maxObjectDiameter && objDiameter > currentSystem.maxObjectDiameter) {
-            errEl.innerHTML = `Error: Object Diameter (${objDiameter} mm) exceeds the system's physical limit (${currentSystem.maxObjectDiameter} mm).<br>`;
-            errEl.classList.add('visible');
+            errorMsgs.push(`Error: Object Diameter (${objDiameter} mm) exceeds the system's physical limit (${currentSystem.maxObjectDiameter} mm).`);
         }
 
         // Determine detector width
@@ -590,8 +586,7 @@
 
             // Warnings
             if (limitingFactor === "travel") {
-                warnEl.textContent = "Note: Resolution is limited by system travel (Min SOD), not object size.";
-                warnEl.classList.add('visible');
+                warnMsgs.push("Note: Resolution is limited by system travel (Min SOD), not object size.");
             }
 
         } else {
@@ -599,19 +594,16 @@
             targetSOD = parseFloat(document.getElementById('manualSOD').value);
             targetSDD = parseFloat(document.getElementById('manualSDD').value);
 
-            if (!targetSOD || !targetSDD) return;
+            if (!targetSOD || !targetSDD) return; // Wait for input
 
             if (targetSOD < currentSystem.minSOD || targetSOD > currentSystem.maxSOD) {
-                warnEl.innerHTML += `Warning: SOD is outside system limits (${currentSystem.minSOD} - ${currentSystem.maxSOD} mm).<br>`;
-                warnEl.classList.add('visible');
+                warnMsgs.push(`Warning: SOD is outside system limits (${currentSystem.minSOD} - ${currentSystem.maxSOD} mm).`);
             }
             if (targetSDD > currentSystem.maxSDD) { 
-                 warnEl.innerHTML += `Warning: SDD exceeds system max (${currentSystem.maxSDD} mm).<br>`;
-                 warnEl.classList.add('visible');
+                 warnMsgs.push(`Warning: SDD exceeds system max (${currentSystem.maxSDD} mm).`);
             }
             if (targetSOD >= targetSDD) {
-                 errEl.textContent = "Error: Object must be between Source and Detector (SOD < SDD).";
-                 errEl.classList.add('visible');
+                 errorMsgs.push("Error: Object must be between Source and Detector (SOD < SDD).");
             }
 
             finalMag = targetSDD / targetSOD;
@@ -624,19 +616,36 @@
 
         // Collision Check
         if (targetSOD + (objDiameter/2) > targetSDD) {
-            errEl.textContent = "Error: Object collision! The object is too large or too close to the detector.";
-            errEl.classList.add('visible');
+            errorMsgs.push("Error: Object collision! The object is too large or too close to the detector.");
         }
 
         // FOV Check (Manual Mode)
         if (calculationMode === 'manual') {
             if (objDiameter > fov) {
-                 errEl.textContent = `Error: Object (${objDiameter}mm) is larger than Field of View (${fov.toFixed(1)}mm).`;
-                 errEl.classList.add('visible');
+                 errorMsgs.push(`Error: Object (${objDiameter}mm) is larger than Field of View (${fov.toFixed(1)}mm).`);
             } else if (objDiameter > usableFOV) {
-                 warnEl.innerHTML += `Warning: Object fits, but violates your ${marginPercent}% safety margin.<br>`;
-                 warnEl.classList.add('visible');
+                 warnMsgs.push(`Warning: Object fits, but violates your ${marginPercent}% safety margin.`);
             }
+        }
+
+        // Render Alerts
+        const warnEl = document.getElementById('warnAlert');
+        const errEl = document.getElementById('errAlert');
+        
+        if (warnMsgs.length > 0) {
+            warnEl.innerHTML = warnMsgs.join('<br>');
+            warnEl.classList.add('visible');
+        } else {
+            warnEl.classList.remove('visible');
+            warnEl.innerHTML = '';
+        }
+
+        if (errorMsgs.length > 0) {
+            errEl.innerHTML = errorMsgs.join('<br>');
+            errEl.classList.add('visible');
+        } else {
+            errEl.classList.remove('visible');
+            errEl.innerHTML = '';
         }
 
         // Update UI
