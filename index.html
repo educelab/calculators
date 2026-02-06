@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cone Beam CT Geometry Calculator</title>
+    <title>EduceLab CT Pixel Calculator</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -287,6 +287,7 @@
             <div class="form-group"><label>Min SOD (mm)</label><input type="number" id="c_minSOD" value="10"></div>
             <div class="form-group"><label>Max SOD (mm)</label><input type="number" id="c_maxSOD" value="800"></div>
             <div class="form-group"><label>Max SDD (mm)</label><input type="number" id="c_maxSDD" value="1000"></div>
+            <div class="form-group"><label>Max Sample Diam. (mm)</label><input type="number" id="c_maxDiam" value="300"></div>
             <div class="checkbox-group" style="margin-bottom: 10px;">
                 <input type="checkbox" id="c_allowDW" checked>
                 <label for="c_allowDW">Supports Double-Wide</label>
@@ -366,7 +367,8 @@
             minSDD: 500,
             maxSDD: 500,
             allowDoubleWide: true,
-            overlapPx: 1152
+            overlapPx: 1152,
+            maxObjectDiameter: 250
         },
         custom: {} 
     };
@@ -428,6 +430,7 @@
             document.getElementById('c_minSOD').value = currentSystem.minSOD || systems[Object.keys(systems)[0]].minSOD;
             document.getElementById('c_maxSOD').value = currentSystem.maxSOD || systems[Object.keys(systems)[0]].maxSOD;
             document.getElementById('c_maxSDD').value = currentSystem.maxSDD || systems[Object.keys(systems)[0]].maxSDD;
+            document.getElementById('c_maxDiam').value = currentSystem.maxObjectDiameter || ""; // Set manual field
             document.getElementById('c_allowDW').checked = currentSystem.hasOwnProperty('allowDoubleWide') ? currentSystem.allowDoubleWide : true;
         } else {
             customDiv.style.display = 'none';
@@ -456,6 +459,7 @@
             maxSOD: parseFloat(document.getElementById('c_maxSOD').value),
             minSDD: 300, 
             maxSDD: parseFloat(document.getElementById('c_maxSDD').value),
+            maxObjectDiameter: parseFloat(document.getElementById('c_maxDiam').value) || null,
             allowDoubleWide: document.getElementById('c_allowDW').checked,
             overlapPx: 100
         };
@@ -488,6 +492,7 @@
         const sysId = 'imported_' + Date.now();
         if (!data.name) data.name = "Imported System";
         if (data.allowDoubleWide === undefined) data.allowDoubleWide = false;
+        // maxObjectDiameter is optional, so no check needed
 
         systems[sysId] = data;
         populateDropdown(sysId);
@@ -500,10 +505,15 @@
     function updateSystemParamsDisplay() {
         const div = document.getElementById('systemParamsDisplay');
         const dwText = currentSystem.allowDoubleWide ? "Yes" : "No";
+        let diamText = "";
+        if (currentSystem.maxObjectDiameter) {
+            diamText = `<br>Max Sample ø: ${currentSystem.maxObjectDiameter} mm`;
+        }
+        
         div.innerHTML = `
             <strong>${currentSystem.name}</strong><br>
             Panel: ${currentSystem.widthPx}px @ ${currentSystem.pixelPitch}mm<br>
-            Travel: SOD(${currentSystem.minSOD}-${currentSystem.maxSOD}), OffsetScan: ${dwText}
+            Travel: SOD(${currentSystem.minSOD}-${currentSystem.maxSOD}), OffsetScan: ${dwText}${diamText}
         `;
     }
 
@@ -522,6 +532,14 @@
         errEl.classList.remove('visible');
         warnEl.textContent = "";
         errEl.textContent = "";
+
+        // NEW: Check system max diameter limit
+        if (currentSystem.maxObjectDiameter && objDiameter > currentSystem.maxObjectDiameter) {
+            errEl.innerHTML = `Error: Object Diameter (${objDiameter} mm) exceeds the system's physical limit (${currentSystem.maxObjectDiameter} mm).<br>`;
+            errEl.classList.add('visible');
+            // We can continue calculation for theoretical interest, or stop. 
+            // Usually helpful to still show the graph, so we let it fall through but keep error visible.
+        }
 
         // Determine detector width
         let isDoubleWide = false;
