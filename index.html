@@ -379,6 +379,48 @@
 
     // --- 2. Mode Switching ---
     function setMode(mode) {
+        if (mode === 'manual' && calculationMode === 'auto') {
+            const objDiameter = parseFloat(document.getElementById('objectDiameter').value);
+            const marginPercent = parseFloat(document.getElementById('safetyMargin').value) || 0;
+            const isDoubleWide = document.getElementById('doubleWide').checked;
+
+            if (objDiameter > 0) {
+                // Re-calculate the optimal state variables to populate manual inputs
+                let activePixels = currentSystem.widthPx;
+                if (isDoubleWide && currentSystem.allowDoubleWide) {
+                    activePixels = (currentSystem.widthPx * 2) - (currentSystem.overlapPx || 100);
+                }
+                const physDetWidth = activePixels * currentSystem.pixelPitch;
+                const usableDetWidth = physDetWidth * (1 - (marginPercent / 100));
+
+                const maxMagFOV = usableDetWidth / objDiameter;
+                const maxMagSys = currentSystem.maxSDD / currentSystem.minSOD;
+                
+                let finalMag;
+                if (maxMagFOV < maxMagSys) {
+                    finalMag = maxMagFOV;
+                } else {
+                    finalMag = maxMagSys;
+                }
+
+                let targetSDD = currentSystem.maxSDD;
+                let targetSOD = targetSDD / finalMag;
+
+                // Clamp to physical limits
+                if (targetSOD < currentSystem.minSOD) {
+                    targetSOD = currentSystem.minSOD;
+                } else if (targetSOD > currentSystem.maxSOD) {
+                    targetSOD = currentSystem.maxSOD;
+                    targetSDD = targetSOD * finalMag; 
+                }
+                
+                // Populate Manual Inputs
+                document.getElementById('manualSOD').value = targetSOD.toFixed(2);
+                document.getElementById('manualSDD').value = targetSDD.toFixed(2);
+                document.getElementById('manualDoubleWide').checked = isDoubleWide;
+            }
+        }
+
         calculationMode = mode;
         
         // Update Buttons
