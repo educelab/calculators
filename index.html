@@ -311,9 +311,6 @@
             </div>
         </div>
 
-        <div id="warnAlert" class="alert alert-warning"></div>
-        <div id="errAlert" class="alert alert-error"></div>
-
         <div class="divider"></div>
 
         <h2>Geometry Settings</h2>
@@ -338,6 +335,9 @@
                 *Visualisation not to scale
             </div>
         </div>
+
+        <div id="warnAlert" class="alert alert-warning"></div>
+        <div id="errAlert" class="alert alert-error"></div>
 
     </div>
 </div>
@@ -537,8 +537,6 @@
         if (currentSystem.maxObjectDiameter && objDiameter > currentSystem.maxObjectDiameter) {
             errEl.innerHTML = `Error: Object Diameter (${objDiameter} mm) exceeds the system's physical limit (${currentSystem.maxObjectDiameter} mm).<br>`;
             errEl.classList.add('visible');
-            // We can continue calculation for theoretical interest, or stop. 
-            // Usually helpful to still show the graph, so we let it fall through but keep error visible.
         }
 
         // Determine detector width
