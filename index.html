@@ -74,7 +74,7 @@
         }
         input[type="checkbox"] { width: auto; }
 
-        .divider { height: 1px; background: var(--border); margin: 10px 0; }
+        .divider { height: 1px; background: var(--border); }
         
         /* Buttons */
         .btn {
@@ -217,9 +217,7 @@
             <p style="font-size: 0.8rem; color: #64748b;">Estimate voxel size based on object size and machine intrinsics.</p>
             <p style="font-size: 0.8rem; color: #64748b;">These are theoretical estimates only. The true voxel size will also depend on sample fixturing and system calibration. Preloaded CT Systems are those available in the EduceLab.</p>
         </div>
-
         <div class="divider"></div>
-
         <div class="form-group">
             <label for="systemSelect">CT System</label>
             <select id="systemSelect" onchange="loadSystemPreset()">
@@ -633,11 +631,11 @@
         document.getElementById('sddResult').textContent = targetSDD.toFixed(1) + " mm";
         document.getElementById('detWidthResult').textContent = physDetWidth.toFixed(1) + " mm";
 
-        drawVisualizer(targetSOD, targetSDD, objDiameter, physDetWidth);
+        drawVisualizer(targetSOD, targetSDD, objDiameter, physDetWidth, marginPercent);
     }
 
     // --- 5. Canvas Visualizer ---
-    function drawVisualizer(sod, sdd, objDiam, detWidth) {
+    function drawVisualizer(sod, sdd, objDiam, detWidth, marginPercent) {
         const canvas = document.getElementById('geoCanvas');
         const ctx = canvas.getContext('2d');
         const w = canvas.width = canvas.offsetWidth;
@@ -655,6 +653,8 @@
         const detY = sourceY + (sdd * scale);
         const objY = sourceY + (sod * scale);
 
+        const detPxWidth = detWidth * scale;
+
         // 1. Draw Axis
         ctx.beginPath();
         ctx.setLineDash([5, 5]);
@@ -670,12 +670,20 @@
         ctx.arc(centerX, sourceY, 6, 0, Math.PI * 2);
         ctx.fill();
 
-        // 3. Draw Detector
-        const detPxWidth = detWidth * scale;
-        ctx.fillStyle = "#334155";
-        ctx.fillRect(centerX - (detPxWidth/2), detY, detPxWidth, 6);
+        // 3. Draw Detector (Active Area) -- CHANGED TO LIGHT GRAY
+        const detX = centerX - (detPxWidth/2);
+        ctx.fillStyle = "#cbd5e1"; // Light Grey
+        ctx.fillRect(detX, detY, detPxWidth, 8);
         
-        // 4. Draw Object
+        // 4. Draw Safety Margins (Red Hash)
+        if (marginPercent > 0) {
+            const sideMarginPx = (detPxWidth * (marginPercent / 100)) / 2;
+            ctx.fillStyle = "rgba(239, 68, 68, 0.6)"; 
+            ctx.fillRect(detX, detY, sideMarginPx, 8);
+            ctx.fillRect(detX + detPxWidth - sideMarginPx, detY, sideMarginPx, 8);
+        }
+
+        // 5. Draw Object
         const objPxRadius = (objDiam * scale) / 2;
         ctx.fillStyle = "rgba(37, 99, 235, 0.3)"; 
         ctx.strokeStyle = "#2563eb";
@@ -684,28 +692,68 @@
         ctx.fill();
         ctx.stroke();
 
-        // 5. Draw Cone Beam
+        // 6. Draw Projected Shadow on Detector -- DARK, SAME THICKNESS
+        const magnification = sdd / sod;
+        const shadowRealWidth = objDiam * magnification;
+        const shadowPxWidth = shadowRealWidth * scale;
+        
+        ctx.fillStyle = "rgba(15, 23, 42, 0.8)"; // Dark Navy/Black
+        ctx.fillRect(centerX - (shadowPxWidth/2), detY, shadowPxWidth, 8);
+
+        // 7. Draw Cone Beam
         ctx.strokeStyle = "rgba(245, 158, 11, 0.4)";
         ctx.beginPath();
         ctx.moveTo(centerX, sourceY);
-        ctx.lineTo(centerX - (detPxWidth/2), detY);
+        ctx.lineTo(detX, detY); 
         ctx.moveTo(centerX, sourceY);
-        ctx.lineTo(centerX + (detPxWidth/2), detY);
+        ctx.lineTo(detX + detPxWidth, detY); 
         ctx.stroke();
 
-        // Labels
+        // 8. Draw Floating Labels (Distances & Items)
         ctx.fillStyle = "#64748b";
         ctx.font = "12px sans-serif";
         ctx.fillText("Source", centerX + 10, sourceY + 5);
-        ctx.fillText("Detector", centerX + (detPxWidth/2) + 5, detY + 5);
+        ctx.fillText("Detector", detX + detPxWidth + 5, detY + 5);
         ctx.fillStyle = "#2563eb";
         ctx.fillText("Object", centerX + objPxRadius + 5, objY + 5);
+
+        // 9. Draw Legend / Key (Top Left)
+        const legendX = 10;
+        let legendY = 10;
+        const lineHeight = 16;
+        
+        ctx.font = "11px sans-serif";
+        ctx.textAlign = "left";
+
+        function drawLegendItem(color, text, type='rect') {
+            ctx.fillStyle = color;
+            if (type === 'circle') {
+                ctx.beginPath();
+                ctx.arc(legendX + 6, legendY + 6, 4, 0, Math.PI*2);
+                ctx.fill();
+            } else if (type === 'rect') {
+                ctx.fillRect(legendX, legendY + 2, 12, 8);
+            }
+            
+            ctx.fillStyle = "#64748b";
+            ctx.fillText(text, legendX + 18, legendY + 10);
+            legendY += lineHeight;
+        }
+
+        drawLegendItem("#f59e0b", "Source", "circle");
+        drawLegendItem("#2563eb", "Object", "circle");
+        
+        if (marginPercent > 0) {
+            drawLegendItem("rgba(239, 68, 68, 0.6)", "Safety Margin", "rect");
+        }
+        
+        drawLegendItem("rgba(15, 23, 42, 0.8)", "Proj. Shadow", "rect");
     }
 
     // Init
     window.addEventListener('resize', calculate);
-    populateDropdown(); // Populate using default (first) key
-    loadSystemPreset(); // Load that system
+    populateDropdown(); 
+    loadSystemPreset(); 
 
 </script>
 
