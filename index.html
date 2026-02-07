@@ -615,11 +615,12 @@
             pixelPitch: 0.1,
             widthPx: 4000,
             minSOD: 5,
-            maxSOD: 800,
+            maxSOD: 600,
             minSDD: 805,
             maxSDD: 805,
             allowDoubleWide: false,
             overlapPx: 0,
+            maxObjectDiameter: 420,
             spotModes: [
                 { name: "Nano Focus (<10W)", size: 0.005 },
                 { name: "Micro Focus (Std)", size: 0.020 },
@@ -638,8 +639,9 @@
             overlapPx: 1152,
             maxObjectDiameter: 250,
              spotModes: [
-                { name: "High Res", size: 0.005 },
-                { name: "Standard", size: 0.020 }
+                { name: "Small", size: 0.008 },
+                { name: "Medium", size: 0.020 },
+                { name: "Large", size: 0.040 }
             ]
         },
         custom: { spotModes: [] } 
