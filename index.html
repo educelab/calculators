@@ -5,16 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduceLab CT Pixel Calculator</title>
     <style>
+        /* Base Variables (Light Mode) */
         :root {
+            color-scheme: light;
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
-            --bg: #f8fafc;
+            --bg: #f3f4f6;
             --card-bg: #ffffff;
-            --text: #1e293b;
-            --border: #e2e8f0;
+            --sidebar-bg: #f9fafb;
+            --text: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --input-bg: #ffffff;
+            --input-border: #d1d5db;
+            
+            --panel-bg: #f9fafb;
+            --panel-border: #e5e7eb;
+            
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
+        }
+
+        /* Dark Mode Variables (Neutral/Matte Gray) */
+        [data-theme="dark"] {
+            color-scheme: dark;
+            --primary: #60a5fa;
+            --primary-hover: #93c5fd;
+            --bg: #171717;
+            --card-bg: #262626;
+            --sidebar-bg: #1f1f1f;
+            --text: #f5f5f5;
+            --text-secondary: #a3a3a3;
+            --border: #404040;
+            --input-bg: #333333;
+            --input-border: #525252;
+            
+            --panel-bg: #1f1f1f;
+            --panel-border: #404040;
+            
+            --success: #34d399;
+            --danger: #f87171;
+            --warning: #fbbf24;
         }
 
         body {
@@ -27,6 +59,35 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            transition: background-color 0.2s, color 0.2s;
+            position: relative; /* For toggle positioning */
+        }
+
+        /* Global Theme Toggle (Top Right of Page) */
+        .theme-toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: color 0.2s, background-color 0.2s;
+            z-index: 1000;
+        }
+        .theme-toggle-btn:hover {
+            color: var(--text);
+            background-color: rgba(128, 128, 128, 0.1);
+        }
+        .theme-toggle-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
         }
 
         .container {
@@ -40,34 +101,45 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             border: 1px solid var(--border);
+            transition: border-color 0.2s, background-color 0.2s;
+            margin-top: 20px; /* Space for toggle if on mobile */
         }
 
         /* Sidebar Styles */
         .sidebar {
-            background-color: #f1f5f9;
+            background-color: var(--sidebar-bg);
             padding: 24px;
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             gap: 20px;
+            transition: background-color 0.2s, border-color 0.2s;
         }
 
-        /* Increased Title Size */
         h1 { font-size: 1.4rem; margin: 0 0 8px 0; color: var(--primary); font-weight: 700; }
-        h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 10px; margin-top: 0; }
-        h3 { font-size: 0.95rem; color: #1e293b; margin: 0 0 10px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-        p { margin: 0; line-height: 1.5; }
+        h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 10px; margin-top: 0; }
+        h3 { font-size: 0.95rem; color: var(--text); margin: 0 0 10px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        p { margin: 0; line-height: 1.5; color: var(--text-secondary); }
 
         .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.85rem; margin-bottom: 5px; font-weight: 500; }
+        label { display: block; font-size: 0.85rem; margin-bottom: 5px; font-weight: 500; color: var(--text); }
         
+        /* Inputs */
         select, input[type="number"], input[type="text"] {
             width: 100%;
             padding: 8px 12px;
             border: 1px solid var(--border);
             border-radius: 6px;
             font-size: 0.9rem;
-            box-sizing: border-box; 
+            box-sizing: border-box;
+            background-color: var(--input-bg);
+            color: var(--text);
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
         }
 
         .checkbox-group {
@@ -75,10 +147,15 @@
             align-items: center;
             gap: 10px;
             font-size: 0.9rem;
+            color: var(--text);
         }
-        input[type="checkbox"] { width: auto; }
+        input[type="checkbox"] { 
+            width: 16px; 
+            height: 16px; 
+            accent-color: var(--primary);
+        }
 
-        .divider { height: 1px; background: var(--border); margin: 10px 0; }
+        .divider { height: 1px; background: var(--border); margin: 10px 0; transition: background 0.2s; }
         
         /* Buttons */
         .btn {
@@ -89,29 +166,30 @@
             cursor: pointer;
             font-size: 0.9rem;
             font-weight: 500;
-            transition: background 0.2s;
+            transition: background 0.2s, color 0.2s;
         }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-primary { background: var(--primary); color: #ffffff; }
+        .btn-primary:hover { opacity: 0.9; }
         
         .btn-outline {
             background: transparent;
-            border: 1px dashed #94a3b8;
-            color: #64748b;
+            border: 1px dashed var(--text-secondary);
+            color: var(--text-secondary);
         }
         .btn-outline:hover {
             border-color: var(--primary);
             color: var(--primary);
-            background: #eff6ff;
+            background: rgba(37, 99, 235, 0.05);
         }
 
         /* Mode Switcher */
         .mode-switch {
             display: flex;
-            background: #e2e8f0;
+            background: var(--border);
             padding: 4px;
             border-radius: 8px;
             margin-bottom: 15px;
+            transition: background 0.2s;
         }
         .mode-btn {
             flex: 1;
@@ -121,15 +199,16 @@
             font-weight: 600;
             border-radius: 6px;
             cursor: pointer;
-            color: #64748b;
+            color: var(--text-secondary);
+            transition: color 0.2s, background 0.2s;
         }
         .mode-btn.active {
-            background: white;
+            background: var(--card-bg);
             color: var(--primary);
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        /* Main Content Styles */
+        /* Main Content */
         .main-content {
             padding: 30px;
             display: flex;
@@ -137,7 +216,7 @@
             gap: 20px;
         }
 
-        /* Hero Section (Result) */
+        /* Hero Result */
         .hero-section {
             text-align: center;
             padding-bottom: 10px;
@@ -148,26 +227,25 @@
             color: var(--primary);
             line-height: 1.1;
         }
-        .metric-label { font-size: 1rem; color: #64748b; margin-top: 5px; }
+        .metric-label { font-size: 1rem; color: var(--text-secondary); margin-top: 5px; }
 
         /* Geometry Bar */
         .geometry-bar {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 15px;
-            background: var(--bg);
+            background: var(--panel-bg);
             padding: 15px;
             border-radius: 8px;
-            border: 1px solid var(--border);
+            border: 1px solid var(--panel-border);
+            transition: background 0.2s, border 0.2s;
         }
 
-        .geo-stat {
-            text-align: center;
-        }
+        .geo-stat { text-align: center; }
         .geo-stat span {
             display: block;
             font-size: 0.75rem;
-            color: #64748b;
+            color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 4px;
@@ -178,24 +256,23 @@
             color: var(--text);
         }
 
-        /* Sampling Container */
-        .sampling-container {
-            margin-top: 10px;
-        }
+        /* Sampling Panel */
+        .sampling-container { margin-top: 10px; }
 
         .sampling-panel {
-            background: #f8fafc;
-            border: 1px solid var(--border);
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
             border-radius: 8px;
             padding: 20px;
             display: grid;
             grid-template-columns: repeat(4, 1fr); 
             gap: 20px;
             font-size: 0.85rem;
+            transition: background 0.2s, border 0.2s;
         }
         .sampling-stat {
             text-align: center;
-            border-right: 1px solid #e2e8f0;
+            border-right: 1px solid var(--border);
             padding: 0 10px;
             display: flex;
             flex-direction: column;
@@ -210,7 +287,7 @@
             margin: 6px 0;
         }
         .sampling-stat span.label {
-            color: #64748b; 
+            color: var(--text-secondary); 
             text-transform: uppercase; 
             font-size: 0.7rem; 
             letter-spacing: 0.05em; 
@@ -218,42 +295,42 @@
         }
         .sampling-stat div.sub {
             font-size: 0.8rem;
-            color: #64748b;
+            color: var(--text-secondary);
         }
         .sampling-stat div.res {
             font-size: 0.8rem;
-            color: #059669; 
+            color: var(--success); 
             font-weight: 600;
             margin-top: 5px;
         }
 
-        /* Custom Input Styling */
+        /* Custom Input Wrapper */
         .custom-input-wrapper {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 5px;
-            margin: 6px 0;
+            margin: 5px 0;
         }
-        .custom-input-wrapper input {
+        /* Custom Input Styling (Subtle) */
+        .sampling-stat input {
             width: 70px;
             padding: 4px 6px;
             font-size: 0.95rem;
             text-align: center;
-            border-color: var(--primary);
-            color: var(--primary);
-            font-weight: 600;
             height: 30px;
+            /* Matches other inputs by inheriting base styles */
         }
 
         /* Canvas */
         .canvas-container {
             width: 100%;
             height: 300px;
-            background: #fff;
+            background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 8px;
             position: relative;
+            transition: background 0.2s, border 0.2s;
         }
         canvas { width: 100%; height: 100%; }
 
@@ -268,33 +345,41 @@
         .alert.visible { display: block; }
         .alert-warning { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
         .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        
+        [data-theme="dark"] .alert-warning { background: #422006; color: #fcd34d; border-color: #78350f; }
+        [data-theme="dark"] .alert-error { background: #450a0a; color: #fca5a5; border-color: #7f1d1d; }
 
         .system-params-details {
             font-size: 0.75rem;
-            color: #64748b;
-            background: #e2e8f0;
+            color: var(--text-secondary);
+            background: var(--panel-bg);
             padding: 10px;
             border-radius: 4px;
             margin-top: 8px;
             line-height: 1.4;
+            border: 1px solid var(--border);
         }
 
         @media (max-width: 900px) {
-            .container { grid-template-columns: 1fr; }
+            .container { grid-template-columns: 1fr; margin-top: 60px; /* Space for toggle */ }
             .geometry-bar { grid-template-columns: 1fr 1fr; }
             .sampling-panel { grid-template-columns: 1fr 1fr; gap: 20px; }
-            .sampling-stat { border-right: none; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; }
+            .sampling-stat { border-right: none; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
             .sampling-stat:nth-last-child(-n+2) { border-bottom: none; }
         }
     </style>
 </head>
 <body>
 
+<button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark Mode">
+    <span id="themeIcon"></span>
+</button>
+
 <div class="container">
     <div class="sidebar">
         <div>
             <h1>EduceLab CT Pixel Calculator</h1>
-            <p style="font-size: 0.8rem; color: #64748b;">Estimate voxel size based on object size and machine intrinsics.</p>
+            <p style="font-size: 0.8rem;">Estimate voxel size based on object size and machine intrinsics.</p>
         </div>
         <div class="divider"></div>
         <div class="form-group">
@@ -330,7 +415,7 @@
         <div class="form-group">
             <label for="safetyMargin">Detector Margin (%)</label>
             <input type="number" id="safetyMargin" value="5" min="0" max="50" step="1" oninput="calculate()">
-            <small style="color:#64748b; font-size:0.75rem;">This value is divided among both edges (e.g. 10% becomes 5% margins on the left and right).</small>
+            <small style="color:var(--text-secondary); font-size:0.75rem;">Buffer space at detector edges. This is divided among both edges (e.g. 5% becomes 2.5% buffer on the left and right).</small>
         </div>
 
         <div id="autoControls">
@@ -385,7 +470,7 @@
 
         <div class="canvas-container">
             <canvas id="geoCanvas"></canvas>
-            <div style="position: absolute; bottom: 8px; right: 12px; font-size: 0.75rem; color: #94a3b8;">
+            <div style="position: absolute; bottom: 8px; right: 12px; font-size: 0.75rem; color: var(--text-secondary);">
                 *Visualization not to scale
             </div>
         </div>
@@ -433,11 +518,11 @@
                     <div class="sub" id="projections3x">-- Proj</div>
                     <div class="res" id="res3x">Res: --</div>
                 </div>
-                <div class="sampling-stat" style="background: #eff6ff; border-radius: 6px; border: 1px solid #bfdbfe;">
-                    <span class="label" style="color: var(--primary);">Custom Step</span>
+                <div class="sampling-stat">
+                    <span class="label">Custom Step</span>
                     <div class="custom-input-wrapper">
                         <input type="number" id="customStep" step="0.01" value="0.25" oninput="calculate()">
-                        <span style="font-size: 0.9rem; font-weight:600; color:var(--primary);">°</span>
+                        <span style="font-size: 0.9rem; font-weight:600; color:var(--text-secondary);">°</span>
                     </div>
                     <div class="sub" id="projectionsCustom">-- Proj</div>
                     <div class="res" id="resCustom">Res: --</div>
@@ -449,6 +534,34 @@
 </div>
 
 <script>
+    // --- 0. Theme Logic & Icons ---
+    
+    // Simple SVG Icons
+    const iconSun = `<svg viewBox="0 0 24 24"><path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" /></svg>`;
+    const iconMoon = `<svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd" /></svg>`;
+
+    function updateThemeIcon(isDark) {
+        document.getElementById('themeIcon').innerHTML = isDark ? iconSun : iconMoon;
+    }
+
+    function toggleTheme() {
+        const body = document.body;
+        const current = body.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        body.setAttribute('data-theme', next);
+        updateThemeIcon(next === 'dark');
+        calculate(); // Redraw canvas
+    }
+    
+    // Init
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.setAttribute('data-theme', 'dark');
+        updateThemeIcon(true);
+    } else {
+        updateThemeIcon(false);
+    }
+
+
     // --- 1. Global State & Presets ---
     let calculationMode = 'auto'; // 'auto' or 'manual'
 
@@ -462,7 +575,8 @@
             minSDD: 805,
             maxSDD: 805,
             allowDoubleWide: false,
-            overlapPx: 0
+            overlapPx: 0,
+            maxObjectDiameter: 300
         },
         skyscan1273: {
             name: "Bruker Skyscan 1273",
@@ -479,7 +593,6 @@
         custom: {} 
     };
 
-    // Initialize with the first available system in the list
     const firstSystemKey = Object.keys(systems)[0];
     let currentSystem = { ...systems[firstSystemKey] };
 
@@ -491,24 +604,17 @@
             const isDoubleWide = document.getElementById('doubleWide').checked;
 
             if (objDiameter > 0) {
-                // Re-calculate the optimal state variables to populate manual inputs
+                // Pre-fill manual values
                 let activePixels = currentSystem.widthPx;
                 if (isDoubleWide && currentSystem.allowDoubleWide) {
                     activePixels = (currentSystem.widthPx * 2) - (currentSystem.overlapPx || 100);
                 }
                 const physDetWidth = activePixels * currentSystem.pixelPitch;
                 const usableDetWidth = physDetWidth * (1 - (marginPercent / 100));
-
                 const maxMagFOV = usableDetWidth / objDiameter;
                 const maxMagSys = currentSystem.maxSDD / currentSystem.minSOD;
                 
-                let finalMag;
-                if (maxMagFOV < maxMagSys) {
-                    finalMag = maxMagFOV;
-                } else {
-                    finalMag = maxMagSys;
-                }
-
+                let finalMag = Math.min(maxMagFOV, maxMagSys);
                 let targetSDD = currentSystem.maxSDD;
                 let targetSOD = targetSDD / finalMag;
 
@@ -529,7 +635,6 @@
         
         document.getElementById('btnModeAuto').className = mode === 'auto' ? 'mode-btn active' : 'mode-btn';
         document.getElementById('btnModeManual').className = mode === 'manual' ? 'mode-btn active' : 'mode-btn';
-
         document.getElementById('autoControls').style.display = mode === 'auto' ? 'block' : 'none';
         document.getElementById('manualControls').style.display = mode === 'manual' ? 'block' : 'none';
 
@@ -540,10 +645,7 @@
     function populateDropdown(selectedId = null) {
         const select = document.getElementById('systemSelect');
         select.innerHTML = ''; 
-        
-        if (!selectedId) {
-            selectedId = Object.keys(systems)[0];
-        }
+        if (!selectedId) selectedId = Object.keys(systems)[0];
 
         for (const [key, sys] of Object.entries(systems)) {
             if (key === 'custom') continue; 
@@ -588,7 +690,6 @@
             document.getElementById('doubleWide').checked = false;
             document.getElementById('manualDoubleWide').checked = false;
         }
-
         updateSystemParamsDisplay();
         calculate();
     }
@@ -648,14 +749,8 @@
         const div = document.getElementById('systemParamsDisplay');
         const dwText = currentSystem.allowDoubleWide ? "Yes" : "No";
         let diamText = "";
-        if (currentSystem.maxObjectDiameter) {
-            diamText = `<br>Max Sample ø: ${currentSystem.maxObjectDiameter} mm`;
-        }
-        div.innerHTML = `
-            <strong>${currentSystem.name}</strong><br>
-            Panel: ${currentSystem.widthPx}px @ ${currentSystem.pixelPitch}mm<br>
-            Travel: SOD(${currentSystem.minSOD}-${currentSystem.maxSOD}), OffsetScan: ${dwText}${diamText}
-        `;
+        if (currentSystem.maxObjectDiameter) diamText = `<br>Max Sample ø: ${currentSystem.maxObjectDiameter} mm`;
+        div.innerHTML = `<strong>${currentSystem.name}</strong><br>Panel: ${currentSystem.widthPx}px @ ${currentSystem.pixelPitch}mm<br>Travel: SOD(${currentSystem.minSOD}-${currentSystem.maxSOD}), OffsetScan: ${dwText}${diamText}`;
     }
 
     // --- 4. The Mathematics (Solver) ---
@@ -667,7 +762,6 @@
 
         if (!objDiameter || objDiameter <= 0) return;
 
-        // Alerts
         let errorMsgs = [];
         let warnMsgs = [];
 
@@ -695,9 +789,9 @@
 
         // BRANCH LOGIC
         if (calculationMode === 'auto') {
-            const forceMaxSdd = document.getElementById('forceMaxSdd').checked;
             const maxMagFOV = usableDetWidth / objDiameter;
             const maxMagSys = currentSystem.maxSDD / currentSystem.minSOD;
+            const forceMaxSdd = document.getElementById('forceMaxSdd').checked;
 
             let limitingFactor = ""; 
             if (maxMagFOV < maxMagSys) {
@@ -830,7 +924,6 @@
         document.getElementById('projectionsCustom').textContent = customProj + " Proj";
         document.getElementById('resCustom').textContent = "Res: " + customRes;
 
-
         drawVisualizer(targetSOD, targetSDD, objDiameter, physDetWidth, marginPercent);
     }
 
@@ -840,6 +933,19 @@
         const ctx = canvas.getContext('2d');
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
+        
+        // Theme Detection inside drawing loop
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+
+        // High contrast palette
+        const colAxis = isDark ? "#525252" : "#cbd5e1";
+        const colDet = isDark ? "#404040" : "#cbd5e1";
+        const colSource = "#f59e0b";
+        const colObjFill = isDark ? "rgba(96, 165, 250, 0.2)" : "rgba(37, 99, 235, 0.3)";
+        const colObjStroke = isDark ? "#60a5fa" : "#2563eb";
+        const colShadow = isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(15, 23, 42, 0.8)";
+        const colBeam = isDark ? "rgba(245, 158, 11, 0.2)" : "rgba(245, 158, 11, 0.4)";
+        const colText = isDark ? "#a3a3a3" : "#64748b";
 
         ctx.clearRect(0, 0, w, h);
 
@@ -855,46 +961,53 @@
 
         const detPxWidth = detWidth * scale;
 
+        // Axis
         ctx.beginPath();
         ctx.setLineDash([5, 5]);
-        ctx.strokeStyle = "#cbd5e1";
+        ctx.strokeStyle = colAxis;
         ctx.moveTo(centerX, sourceY);
         ctx.lineTo(centerX, detY);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        ctx.fillStyle = "#f59e0b";
+        // Source
+        ctx.fillStyle = colSource;
         ctx.beginPath();
         ctx.arc(centerX, sourceY, 6, 0, Math.PI * 2);
         ctx.fill();
 
+        // Detector
         const detX = centerX - (detPxWidth/2);
-        ctx.fillStyle = "#cbd5e1"; 
+        ctx.fillStyle = colDet; 
         ctx.fillRect(detX, detY, detPxWidth, 8);
         
+        // Margins
         if (marginPercent > 0) {
             const sideMarginPx = (detPxWidth * (marginPercent / 100)) / 2;
-            ctx.fillStyle = "rgba(239, 68, 68, 0.6)"; 
+            ctx.fillStyle = isDark ? "rgba(248, 113, 113, 0.4)" : "rgba(239, 68, 68, 0.6)"; 
             ctx.fillRect(detX, detY, sideMarginPx, 8);
             ctx.fillRect(detX + detPxWidth - sideMarginPx, detY, sideMarginPx, 8);
         }
 
+        // Object
         const objPxRadius = (objDiam * scale) / 2;
-        ctx.fillStyle = "rgba(37, 99, 235, 0.3)"; 
-        ctx.strokeStyle = "#2563eb";
+        ctx.fillStyle = colObjFill; 
+        ctx.strokeStyle = colObjStroke;
         ctx.beginPath();
         ctx.arc(centerX, objY, objPxRadius, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
 
+        // Shadow
         const magnification = sdd / sod;
         const shadowRealWidth = objDiam * magnification;
         const shadowPxWidth = shadowRealWidth * scale;
         
-        ctx.fillStyle = "rgba(15, 23, 42, 0.8)"; 
+        ctx.fillStyle = colShadow; 
         ctx.fillRect(centerX - (shadowPxWidth/2), detY, shadowPxWidth, 8);
 
-        ctx.strokeStyle = "rgba(245, 158, 11, 0.4)";
+        // Beam
+        ctx.strokeStyle = colBeam;
         ctx.beginPath();
         ctx.moveTo(centerX, sourceY);
         ctx.lineTo(detX, detY); 
@@ -902,13 +1015,15 @@
         ctx.lineTo(detX + detPxWidth, detY); 
         ctx.stroke();
 
-        ctx.fillStyle = "#64748b";
+        // Labels
+        ctx.fillStyle = colText;
         ctx.font = "12px sans-serif";
         ctx.fillText("Source", centerX + 10, sourceY + 5);
         ctx.fillText("Detector", detX + detPxWidth + 5, detY + 5);
-        ctx.fillStyle = "#2563eb";
+        ctx.fillStyle = colObjStroke;
         ctx.fillText("Object", centerX + objPxRadius + 5, objY + 5);
 
+        // Legend
         const legendX = 10;
         let legendY = 10;
         const lineHeight = 16;
@@ -926,21 +1041,22 @@
                 ctx.fillRect(legendX, legendY + 2, 12, 8);
             }
             
-            ctx.fillStyle = "#64748b";
+            ctx.fillStyle = colText;
             ctx.fillText(text, legendX + 18, legendY + 10);
             legendY += lineHeight;
         }
 
-        drawLegendItem("#f59e0b", "Source", "circle");
-        drawLegendItem("#2563eb", "Object", "circle");
+        drawLegendItem(colSource, "Source", "circle");
+        drawLegendItem(colObjStroke, "Object", "circle");
         
         if (marginPercent > 0) {
-            drawLegendItem("rgba(239, 68, 68, 0.6)", "Safety Margin", "rect");
+            drawLegendItem(isDark ? "rgba(248, 113, 113, 0.4)" : "rgba(239, 68, 68, 0.6)", "Safety Margin", "rect");
         }
         
-        drawLegendItem("rgba(15, 23, 42, 0.8)", "Proj. Shadow", "rect");
+        drawLegendItem(colShadow, "Proj. Shadow", "rect");
     }
 
+    // Init
     window.addEventListener('resize', calculate);
     populateDropdown(); 
     loadSystemPreset(); 
