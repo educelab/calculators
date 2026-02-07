@@ -66,7 +66,3 @@ You can load your own CT system parameters by clicking **"Load Config JSON"**. T
 The calculator estimates the **Effective Resolution** based on the rotational step size.
 * **Formula:** Arc Length ≈ Radius × Step(rad).
 * If the Arc Length is larger than the projected pixel size, the effective resolution is limited by the sampling rate rather than the magnification.
-
-## License
-
-MIT License. Free to use for academic and industrial scan planning.
