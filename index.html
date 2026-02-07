@@ -31,7 +31,7 @@
 
         .container {
             display: grid;
-            grid-template-columns: 320px 1fr; /* Slightly wider sidebar */
+            grid-template-columns: 320px 1fr;
             gap: 0; 
             max-width: 1200px;
             width: 100%;
@@ -45,18 +45,20 @@
         /* Sidebar Styles */
         .sidebar {
             background-color: #f1f5f9;
-            padding: 25px; /* Restored padding */
+            padding: 24px;
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            gap: 18px; /* Restored gap */
+            gap: 20px;
         }
 
-        h1 { font-size: 1.2rem; margin: 0 0 8px 0; color: var(--primary); }
-        h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 10px; margin-top: 5px; }
+        /* Increased Title Size */
+        h1 { font-size: 1.4rem; margin: 0 0 8px 0; color: var(--primary); font-weight: 700; }
+        h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 10px; margin-top: 0; }
+        h3 { font-size: 0.95rem; color: #1e293b; margin: 0 0 10px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
         p { margin: 0; line-height: 1.5; }
 
-        .form-group { margin-bottom: 12px; }
+        .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 0.85rem; margin-bottom: 5px; font-weight: 500; }
         
         select, input[type="number"], input[type="text"] {
@@ -76,7 +78,7 @@
         }
         input[type="checkbox"] { width: auto; }
 
-        .divider { height: 1px; background: var(--border); margin: 8px 0; }
+        .divider { height: 1px; background: var(--border); margin: 10px 0; }
         
         /* Buttons */
         .btn {
@@ -129,59 +131,66 @@
 
         /* Main Content Styles */
         .main-content {
-            padding: 30px; /* Restored padding */
+            padding: 30px;
             display: flex;
             flex-direction: column;
-            gap: 25px; /* Restored gap */
+            gap: 20px;
         }
 
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .metric-card {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            padding: 20px;
-            border-radius: 8px;
+        /* Hero Section (Result) */
+        .hero-section {
             text-align: center;
-            min-width: 200px;
+            padding-bottom: 10px;
         }
         .metric-value {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: 700;
             color: var(--primary);
-            display: block;
-            line-height: 1.2;
+            line-height: 1.1;
         }
-        .metric-label { font-size: 0.85rem; color: #64748b; }
+        .metric-label { font-size: 1rem; color: #64748b; margin-top: 5px; }
 
-        .details-grid {
+        /* Geometry Bar */
+        .geometry-bar {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 15px;
-        }
-
-        .detail-item {
             background: var(--bg);
-            padding: 12px 15px;
-            border-radius: 6px;
+            padding: 15px;
+            border-radius: 8px;
             border: 1px solid var(--border);
         }
-        .detail-item strong { display: block; font-size: 1.1rem; }
-        .detail-item span { font-size: 0.8rem; color: #64748b; }
 
-        /* Sampling Panel */
+        .geo-stat {
+            text-align: center;
+        }
+        .geo-stat span {
+            display: block;
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+        .geo-stat strong {
+            display: block;
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+
+        /* Sampling Container */
+        .sampling-container {
+            margin-top: 10px;
+        }
+
         .sampling-panel {
             background: #f8fafc;
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 15px;
+            padding: 20px;
             display: grid;
             grid-template-columns: repeat(4, 1fr); 
-            gap: 15px;
+            gap: 20px;
             font-size: 0.85rem;
         }
         .sampling-stat {
@@ -198,7 +207,7 @@
             display: block;
             font-size: 1.1rem;
             color: var(--primary);
-            margin: 4px 0;
+            margin: 6px 0;
         }
         .sampling-stat span.label {
             color: #64748b; 
@@ -208,14 +217,14 @@
             font-weight: 700;
         }
         .sampling-stat div.sub {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: #64748b;
         }
         .sampling-stat div.res {
             font-size: 0.8rem;
             color: #059669; 
             font-weight: 600;
-            margin-top: 4px;
+            margin-top: 5px;
         }
 
         /* Custom Input Styling */
@@ -224,7 +233,7 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
-            margin: 4px 0;
+            margin: 6px 0;
         }
         .custom-input-wrapper input {
             width: 70px;
@@ -240,7 +249,7 @@
         /* Canvas */
         .canvas-container {
             width: 100%;
-            height: 280px; /* Slightly taller */
+            height: 300px;
             background: #fff;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -272,6 +281,7 @@
 
         @media (max-width: 900px) {
             .container { grid-template-columns: 1fr; }
+            .geometry-bar { grid-template-columns: 1fr 1fr; }
             .sampling-panel { grid-template-columns: 1fr 1fr; gap: 20px; }
             .sampling-stat { border-right: none; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; }
             .sampling-stat:nth-last-child(-n+2) { border-bottom: none; }
@@ -285,7 +295,6 @@
         <div>
             <h1>EduceLab CT Pixel Calculator</h1>
             <p style="font-size: 0.8rem; color: #64748b;">Estimate voxel size based on object size and machine intrinsics.</p>
-            <p style="font-size: 0.8rem; color: #64748b;">These are theoretical estimates only. The true voxel size will also depend on sample fixturing and system calibration. Preloaded CT Systems are those available in the EduceLab.</p>
         </div>
         <div class="divider"></div>
         <div class="form-group">
@@ -321,7 +330,7 @@
         <div class="form-group">
             <label for="safetyMargin">Detector Margin (%)</label>
             <input type="number" id="safetyMargin" value="5" min="0" max="50" step="1" oninput="calculate()">
-            <small style="color:#64748b; font-size:0.75rem;">Percentage of the detector width to leave as margin around the sample. This value is divided among both edges (e.g. 10% becomes 5% margins on the left and right).</small>
+            <small style="color:#64748b; font-size:0.75rem;">This value is divided among both edges (e.g. 10% becomes 5% margins on the left and right).</small>
         </div>
 
         <div id="autoControls">
@@ -368,74 +377,71 @@
 
     <div class="main-content">
         
-        <div class="results-header">
-            <div>
-                <h2 style="color: var(--text); margin-top:0;">Projected Pixel Size</h2>
-                <div class="metric-value" id="resResult">--</div>
-                <div class="metric-label" id="magResult">at --x Magnification</div>
-            </div>
-            
-            <div class="metric-card">
-                <span style="font-size:0.8rem; color:#64748b;">Scan Field of View</span>
-                <strong style="display:block; font-size:1.6rem; color:#1e293b;" id="fovResult">-- mm</strong>
-            </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <h2>Geometry Settings</h2>
-        <div class="details-grid">
-            <div class="detail-item">
-                <span id="sodLabel">SOD</span>
-                <strong id="sodResult">-- mm</strong>
-            </div>
-            <div class="detail-item">
-                <span>SDD</span>
-                <strong id="sddResult">-- mm</strong>
-            </div>
-            <div class="detail-item">
-                <span>Eff. Det. Width</span>
-                <strong id="detWidthResult">-- mm</strong>
-            </div>
+        <div class="hero-section">
+            <h2 style="margin-bottom: 5px;">Projected Pixel Size</h2>
+            <div class="metric-value" id="resResult">--</div>
+            <div class="metric-label" id="magResult">at --x Magnification</div>
         </div>
 
         <div class="canvas-container">
             <canvas id="geoCanvas"></canvas>
             <div style="position: absolute; bottom: 8px; right: 12px; font-size: 0.75rem; color: #94a3b8;">
-                *Visualisation not to scale
+                *Visualization not to scale
+            </div>
+        </div>
+
+        <div class="geometry-bar">
+            <div class="geo-stat">
+                <span>SOD (Source-Object)</span>
+                <strong id="sodResult">-- mm</strong>
+            </div>
+            <div class="geo-stat">
+                <span>SDD (Source-Detector)</span>
+                <strong id="sddResult">-- mm</strong>
+            </div>
+            <div class="geo-stat">
+                <span>Scan FOV</span>
+                <strong id="fovResult">-- mm</strong>
+            </div>
+            <div class="geo-stat">
+                <span>Active Det. Width</span>
+                <strong id="detWidthResult">-- mm</strong>
             </div>
         </div>
 
         <div id="warnAlert" class="alert alert-warning"></div>
         <div id="errAlert" class="alert alert-error"></div>
 
-        <div class="sampling-panel">
-            <div class="sampling-stat">
-                <span class="label">Nyquist Limit (1x)</span>
-                <strong id="stepSize1x">--°</strong>
-                <div class="sub" id="projections1x">-- Proj</div>
-                <div class="res" id="res1x">Res: --</div>
-            </div>
-            <div class="sampling-stat">
-                <span class="label">High Quality (2x)</span>
-                <strong id="stepSize2x">--°</strong>
-                <div class="sub" id="projections2x">-- Proj</div>
-                <div class="res" id="res2x">Res: --</div>
-            </div>
-            <div class="sampling-stat">
-                <span class="label">Fast Scan (3x)</span>
-                <strong id="stepSize3x">--°</strong>
-                <div class="sub" id="projections3x">-- Proj</div>
-                <div class="res" id="res3x">Res: --</div>
-            </div>
-            <div class="sampling-stat" style="background: #eff6ff; border-radius: 6px; border: 1px solid #bfdbfe;">
-                <span class="label" style="color: var(--primary);">Custom Step</span>
-                <div class="custom-input-wrapper">
-                    <input type="number" id="customStep" step="0.01" value="0.25" oninput="calculate()">
-                    <span style="font-size: 0.9rem; font-weight:600; color:var(--primary);">°</span>
+        <div class="sampling-container">
+            <h3>Sampling Strategy</h3>
+            <div class="sampling-panel">
+                <div class="sampling-stat">
+                    <span class="label">Nyquist Limit (1x)</span>
+                    <strong id="stepSize1x">--°</strong>
+                    <div class="sub" id="projections1x">-- Proj</div>
+                    <div class="res" id="res1x">Res: --</div>
                 </div>
-                <div class="sub" id="projectionsCustom">-- Proj</div>
-                <div class="res" id="resCustom">Res: --</div>
+                <div class="sampling-stat">
+                    <span class="label">High Quality (2x)</span>
+                    <strong id="stepSize2x">--°</strong>
+                    <div class="sub" id="projections2x">-- Proj</div>
+                    <div class="res" id="res2x">Res: --</div>
+                </div>
+                <div class="sampling-stat">
+                    <span class="label">Fast Scan (3x)</span>
+                    <strong id="stepSize3x">--°</strong>
+                    <div class="sub" id="projections3x">-- Proj</div>
+                    <div class="res" id="res3x">Res: --</div>
+                </div>
+                <div class="sampling-stat" style="background: #eff6ff; border-radius: 6px; border: 1px solid #bfdbfe;">
+                    <span class="label" style="color: var(--primary);">Custom Step</span>
+                    <div class="custom-input-wrapper">
+                        <input type="number" id="customStep" step="0.01" value="0.25" oninput="calculate()">
+                        <span style="font-size: 0.9rem; font-weight:600; color:var(--primary);">°</span>
+                    </div>
+                    <div class="sub" id="projectionsCustom">-- Proj</div>
+                    <div class="res" id="resCustom">Res: --</div>
+                </div>
             </div>
         </div>
 
@@ -877,7 +883,7 @@
         ctx.fillStyle = "rgba(37, 99, 235, 0.3)"; 
         ctx.strokeStyle = "#2563eb";
         ctx.beginPath();
-        ctx.arc(centerX, objY, objPxRadius, 0, Math.PI*2);
+        ctx.arc(centerX, objY, objPxRadius, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
 
