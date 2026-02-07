@@ -1,58 +1,72 @@
-# Cone Beam CT Geometry Calculator
+# EduceLab CT Pixel Calculator
 
-A web-based tool for Radiographers and CT Lab Managers to estimate scanning resolution and geometric parameters. This application helps determine the optimal Source-to-Object (SOD) and Source-to-Detector (SDD) distances to achieve the best voxel resolution for a given object size, while respecting the physical travel limits of the scan system.
+A standalone web tool for estimating Cone Beam CT (CBCT) geometry, voxel size, and sampling strategies. Designed to help researchers optimize scan settings based on object size and specific machine constraints.
 
-## 🚀 Features
+## Features
 
-* **Auto-Optimization Mode:** Automatically calculates the maximum magnification and best resolution where the object still fits within the Field of View.
-* **Manual Positioning Mode:** Manually set SOD and SDD to see resulting pixel size and check for collisions or FOV clipping.
-* **System Presets:** Includes generic presets for Micro-CT, Nano-CT, and Industrial systems.
-* **Custom Import:** Load your own scanner definitions via JSON.
-* **Double-Wide Support:** Toggle offset-detector calculations for systems that support half-fan scans.
-* **Live Visualizer:** Dynamic HTML5 Canvas diagram showing the source, object, and detector relationship.
+### 1. Geometry Optimization
+* **System Presets:** Pre-configured constraints for EduceLab systems: **Waygate V|tome|x M300** and **Bruker Skyscan 1273**.
+* **Auto-Optimize Mode:** Automatically calculates the optimal Source-Object Distance (SOD) and Source-Detector Distance (SDD) to maximize resolution while keeping the object within the detector's field of view.
+* **Manual Mode:** Allows fine-tuning of distances. When switching from Auto to Manual, the calculator pre-fills the inputs with the optimal values as a starting point.
+* **Double-Wide (Offset) Support:** Calculates geometry for offset scans (virtual detector extension) if the system supports it.
 
-## 🛠 Usage
+### 2. Real-Time Visualization
+* Interactive 2D canvas visualization showing the X-ray source, object position, detector active area, and safety margins.
+* Visual feedback for object collisions or field-of-view violations.
 
-1.  **Select a System:** Choose a preset from the dropdown or load a custom JSON configuration.
-2.  **Input Object Size:** Enter the diameter of your sample in millimeters.
-3.  **Choose Mode:**
-    * *Auto:* The app solves for the best resolution.
-    * *Manual:* You define the geometry, the app warns of errors.
-4.  **Read Results:** View the effective pixel size, required travel positions, and magnification.
+### 3. Sampling Strategy Assistant
+Calculates the required number of projections based on the **Crowther Criterion** (Nyquist sampling) to prevent aliasing artifacts. It provides four tiers of recommendations:
+* **Nyquist Limit (1x):** The theoretical limit for perfect reconstruction.
+* **High Quality (2x):** Recommended for standard, high-detail scans (undersampled by factor of 2).
+* **Fast Scan (3x):** For high-throughput or quick preview scans.
+* **Custom Step:** Allows users to input a specific rotational step size (e.g., 0.25°) to see the resulting Effective Resolution.
 
-## ⚙️ Custom System Configuration (JSON)
+### 4. Custom Configuration
+* **Manual Intrinsics:** Modify pixel pitch, detector width, and travel limits directly in the UI.
+* **JSON Import:** Load custom machine configurations via a JSON file.
 
-You can upload a `.json` file to add your specific machine intrinsics to the calculator. Use the following format:
+## Quick Start
+
+1.  Download `index.html`.
+2.  Open the file in any modern web browser (Chrome, Firefox, Edge, Safari).
+3.  Select your **CT System** from the dropdown.
+4.  Enter your **Object Diameter** (mm).
+5.  View the **Projected Pixel Size** and **Sampling Recommendations** immediately.
+
+## Custom System Configuration
+
+You can load your own CT system parameters by clicking **"Load Config JSON"**. The file should follow this structure:
 
 ```json
 {
-  "name": "Nikon XT H 225",
-  "pixelPitch": 0.200, 
-  "widthPx": 2000,
-  "minSOD": 25.0,
-  "maxSOD": 950.0,
-  "minSDD": 300.0,
-  "maxSDD": 1100.0,
+  "name": "My Custom CT",
+  "pixelPitch": 0.2,
+  "widthPx": 2048,
+  "minSOD": 10,
+  "maxSOD": 900,
+  "minSDD": 1000,
+  "maxSDD": 1000,
+  "maxObjectDiameter": 400,
   "allowDoubleWide": true,
   "overlapPx": 150
 }
 ```
 
-* `pixelPitch`: The physical size of a detector pixel (mm).
-* `widthPx`: The number of horizontal pixels on the detector.
-* `minSOD` / `maxSOD`: The travel range of the manipulator (mm).
-* `maxSDD`: The maximum distance the detector can move back (mm).
-* `allowDoubleWide`: `true` if the detector can shift for offset scans, `false` otherwise.
-* `overlapPx`: The number of pixels used for overlap reconstruction in offset scans (usually 100-200).
+| Field | Description |
+| :--- | :--- |
+| `pixelPitch` | Detector pixel size in mm. |
+| `widthPx` | Physical width of the detector in pixels. |
+| `minSOD` / `maxSOD` | Mechanical travel limits for the stage. |
+| `minSDD` / `maxSDD` | Mechanical travel limits for the detector. |
+| `allowDoubleWide` | `true` if the system supports offset scans. |
+| `overlapPx` | Number of pixels of overlap required for offset scans. |
 
-## 📦 Deployment
+## Sampling Logic
 
-This is a static web application (HTML/CSS/JS in a single file).
+The calculator estimates the **Effective Resolution** based on the rotational step size.
+* **Formula:** Arc Length ≈ Radius × Step(rad).
+* If the Arc Length is larger than the projected pixel size, the effective resolution is limited by the sampling rate rather than the magnification.
 
-1.  Ensure your main file is named `index.html`.
-2.  Push to GitHub.
-3.  Enable GitHub Pages (or use the provided GitHub Actions workflow).
-
-## 📄 License
+## License
 
 MIT License. Free to use for academic and industrial scan planning.
