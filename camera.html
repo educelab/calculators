@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera System Calculator</title>
+    <style>
+        /* Base Variables (Light Mode) */
+        :root {
+            color-scheme: light;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --sidebar-bg: #f9fafb;
+            --text: #111827;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --input-bg: #ffffff;
+            --input-border: #d1d5db;
+            
+            --panel-bg: #f9fafb;
+            --panel-border: #e5e7eb;
+            
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        /* Dark Mode Variables */
+        [data-theme="dark"] {
+            color-scheme: dark;
+            --primary: #60a5fa;
+            --primary-hover: #93c5fd;
+            --bg: #171717;
+            --card-bg: #262626;
+            --sidebar-bg: #1f1f1f;
+            --text: #f5f5f5;
+            --text-secondary: #a3a3a3;
+            --border: #404040;
+            --input-bg: #333333;
+            --input-border: #525252;
+            
+            --panel-bg: #1f1f1f;
+            --panel-border: #404040;
+            
+            --success: #34d399;
+            --danger: #f87171;
+            --warning: #fbbf24;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.2s, color 0.2s;
+            position: relative;
+            scroll-behavior: smooth;
+        }
+
+        .theme-toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: color 0.2s, background-color 0.2s;
+            z-index: 1000;
+        }
+        .theme-toggle-btn:hover {
+            color: var(--text);
+            background-color: rgba(128, 128, 128, 0.1);
+        }
+        .theme-toggle-btn svg { width: 22px; height: 22px; color: currentColor; }
+
+        .container {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 0; 
+            max-width: 1200px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: border-color 0.2s, background-color 0.2s;
+            margin-top: 20px;
+            z-index: 10;
+        }
+
+        .sidebar {
+            background-color: var(--sidebar-bg);
+            padding: 24px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: background-color 0.2s, border-color 0.2s;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        h1 { font-size: 1.4rem; margin: 0 0 8px 0; color: var(--primary); font-weight: 700; }
+        h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 10px; margin-top: 0; }
+        h3 { font-size: 0.95rem; margin: 0 0 10px 0; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+        
+        p { margin: 0; line-height: 1.5; color: var(--text-secondary); }
+
+        .sidebar-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px; 
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        label { display: block; font-size: 0.85rem; margin-bottom: 4px; font-weight: 500; color: var(--text); transition: color 0.2s; }
+        
+        select, input[type="number"] {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+            background-color: var(--input-bg);
+            color: var(--text);
+            transition: all 0.2s;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .input-locked {
+            background-color: var(--panel-bg) !important;
+            border: 1px dashed var(--border) !important;
+            color: var(--text-secondary) !important;
+            font-weight: 700 !important;
+            cursor: not-allowed;
+            opacity: 0.8;
+            box-shadow: none !important;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+        input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); }
+
+        .mode-switch {
+            display: flex;
+            background: var(--border);
+            padding: 4px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            margin-bottom: 10px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 6px;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.2s, background 0.2s;
+        }
+        .mode-btn.active {
+            background: var(--card-bg);
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .divider { height: 1px; background: var(--border); margin: 0; transition: background 0.2s; }
+
+        .main-content {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .hero-section { text-align: center; padding-bottom: 10px; position: relative; }
+        
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .hero-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hero-stat h2 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin: 0 0 8px 0;
+            font-weight: 600;
+        }
+
+        .metric-value { 
+            font-size: 2.5rem; 
+            font-weight: 700; 
+            line-height: 1.1; 
+        }
+        
+        .val-primary { color: var(--primary); }
+        .metric-label { font-size: 0.9rem; color: var(--text-secondary); margin-top: 5px; }
+
+        .geometry-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            background: var(--panel-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--panel-border);
+            transition: background 0.2s, border 0.2s;
+        }
+        .geo-stat { text-align: center; }
+        .geo-stat span { display: block; font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .geo-stat strong { display: block; font-size: 1.1rem; color: var(--text); }
+
+        .canvas-container {
+            width: 100%;
+            height: 340px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            position: relative;
+            transition: background 0.2s, border 0.2s;
+            overflow: hidden;
+        }
+        canvas { width: 100%; height: 100%; display: block; }
+
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: none;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+        .alert.visible { display: block; }
+        .alert-warning { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
+        .alert-danger { background: #fef2f2; color: #991b1b; border: 1px solid #f87171; }
+        [data-theme="dark"] .alert-warning { background: #422006; color: #fcd34d; border-color: #78350f; }
+        [data-theme="dark"] .alert-danger { background: #450a0a; color: #f87171; border-color: #991b1b; }
+
+        .physics-container {
+            max-width: 1200px;
+            width: 100%;
+            margin-top: 30px;
+            margin-bottom: 40px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 40px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .physics-content h3 { color: var(--primary); margin-top: 0; margin-bottom: 25px; font-size: 1.4rem; }
+        .physics-content h4 { color: var(--text); margin-top: 25px; margin-bottom: 10px; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .physics-content p { margin-bottom: 1.2em; line-height: 1.7; color: var(--text-secondary); font-size: 0.95rem; }
+        .formula-inline { background: var(--panel-bg); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.9em; border: 1px solid var(--border); color: var(--primary); font-weight: 600; }
+
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; margin-top: 60px; }
+            .sidebar { max-height: none; overflow-y: visible; }
+            .geometry-bar { grid-template-columns: 1fr 1fr; }
+            .physics-container { padding: 25px; }
+        }
+    </style>
+</head>
+<body>
+
+<button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark Mode">
+    <span id="themeIcon"></span>
+</button>
+
+<div class="container">
+    <div class="sidebar">
+        <div>
+            <h1>Camera System Calculator</h1>
+            <p style="font-size: 0.8rem;">Relative crop factor & precise thin-lens FOV estimation.</p>
+        </div>
+        
+        <div class="sidebar-input-group">
+            <h3>Camera Sensor Format</h3>
+            <div class="form-group">
+                <select id="sensorFormat" onchange="updateSensor()">
+                    <option value="1/4">1/4" (3.2 x 2.4 mm)</option>
+                    <option value="1/3">1/3" (4.8 x 3.6 mm)</option>
+                    <option value="1/2">1/2" (6.4 x 4.8 mm)</option>
+                    <option value="1/1.8" selected>1/1.8" (7.18 x 5.32 mm)</option>
+                    <option value="2/3">2/3" (8.8 x 6.6 mm)</option>
+                    <option value="1">1" (12.8 x 9.6 mm)</option>
+                    <option value="4/3">4/3" (17.3 x 13.0 mm)</option>
+                    <option value="apsc">APS-C (23.6 x 15.6 mm)</option>
+                    <option value="ff">Full Frame (36.0 x 24.0 mm)</option>
+                    <option value="custom">Custom...</option>
+                </select>
+            </div>
+            
+            <div id="sensorManual" class="form-group" style="display:none; gap:10px; margin-top:5px;">
+                <div style="flex:1;">
+                    <label>Width (mm)</label>
+                    <input type="number" id="sensorW" value="7.18" step="0.1" oninput="calculate()">
+                </div>
+                <div style="flex:1;">
+                    <label>Height (mm)</label>
+                    <input type="number" id="sensorH" value="5.32" step="0.1" oninput="calculate()">
+                </div>
+            </div>
+
+            <div style="font-size: 0.8rem; color: var(--text-secondary); text-align: right; margin-top: 5px;">
+                Sensor Diagonal: <strong id="sensorDiagDisplay">8.93 mm</strong>
+            </div>
+        </div>
+
+        <div class="sidebar-input-group">
+            <h3>Lens Image Circle (Format)</h3>
+            <div class="form-group">
+                <select id="lensFormat" onchange="updateLens()">
+                    <option value="1/4">1/4" (3.2 x 2.4 mm)</option>
+                    <option value="1/3">1/3" (4.8 x 3.6 mm)</option>
+                    <option value="1/2">1/2" (6.4 x 4.8 mm)</option>
+                    <option value="1/1.8">1/1.8" (7.18 x 5.32 mm)</option>
+                    <option value="2/3" selected>2/3" (8.8 x 6.6 mm)</option>
+                    <option value="1">1" (12.8 x 9.6 mm)</option>
+                    <option value="4/3">4/3" (17.3 x 13.0 mm)</option>
+                    <option value="apsc">APS-C (23.6 x 15.6 mm)</option>
+                    <option value="ff">Full Frame (36.0 x 24.0 mm)</option>
+                    <option value="custom">Custom...</option>
+                </select>
+            </div>
+            
+            <div id="lensManual" class="form-group" style="display:none; gap:10px; margin-top:5px;">
+                <div style="flex:1;">
+                    <label>Width (mm)</label>
+                    <input type="number" id="lensW" value="8.8" step="0.1" oninput="calculate()">
+                </div>
+                <div style="flex:1;">
+                    <label>Height (mm)</label>
+                    <input type="number" id="lensH" value="6.6" step="0.1" oninput="calculate()">
+                </div>
+            </div>
+
+            <div style="font-size: 0.8rem; color: var(--text-secondary); text-align: right; margin-top: 5px;">
+                Lens Diagonal: <strong id="lensDiagDisplay">11.00 mm</strong>
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label for="lensAfov">Known Angular FOV</label>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="number" id="lensAfov" placeholder="e.g., 45" step="0.1" oninput="deriveFlFromAfov()" style="flex:1;">
+                    <span style="font-size:0.8rem; color:var(--text-secondary);">° Horiz.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-input-group">
+            <h3>Calculate Target</h3>
+            <div class="mode-switch">
+                <div id="btnSolveFOV" class="mode-btn active" onclick="setSolveMode('fov')">FOV</div>
+                <div id="btnSolveFL" class="mode-btn" onclick="setSolveMode('fl')">Focal L.</div>
+                <div id="btnSolveWD" class="mode-btn" onclick="setSolveMode('wd')">Work Dist.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="inputFL">Focal Length (FL) mm</label>
+                <input type="number" id="inputFL" value="12" step="1" oninput="clearAfovAndCalc()">
+            </div>
+            
+            <div class="form-group">
+                <label for="inputWD">Working Distance (WD) mm</label>
+                <input type="number" id="inputWD" value="500" step="10" oninput="calculate()">
+            </div>
+
+            <div class="form-group">
+                <label for="inputFOV">Field of View (Width) mm</label>
+                <input type="number" id="inputFOV" value="292" step="10" oninput="calculate()">
+                <small id="fovHeightHelper" style="color:var(--text-secondary); font-size:0.75rem;">Height: -- mm</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="hero-section" id="calc-hero">
+            <div class="hero-grid">
+                <div class="hero-stat">
+                    <h2 id="heroLabel">Effective Field of View (W)</h2>
+                    <div class="metric-value val-primary" id="heroValue">-- mm</div>
+                    <div id="heroValueImp" style="font-size: 1rem; color: var(--text-secondary); margin-top: 4px; font-weight: 500;">-- in</div>
+                    <div id="lensNativeFovHelper" class="metric-label" style="margin-top: 8px;">Native Lens FOV: -- mm</div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="canvas-container">
+                <canvas id="geoCanvas"></canvas>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); padding-left: 4px;">
+                    *Schematic dynamically scaled relative to sensor
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="checkbox-group" style="gap: 6px;">
+                        <input type="checkbox" id="showRefObj" checked onchange="calculate()">
+                        <label for="showRefObj" style="margin: 0; font-size: 0.8rem; font-weight: 500;">Ref. Object</label>
+                    </div>
+                    <input type="number" id="refObjSize" value="150" step="10" oninput="calculate()" style="width: 70px; padding: 4px 6px; font-size: 0.85rem; border-radius: 4px;">
+                    <span style="font-size: 0.8rem; color: var(--text-secondary);">mm</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="geometry-bar">
+            <div class="geo-stat" title="Ratio of the Lens Diagonal to the Sensor Diagonal">
+                <span>Crop Factor</span>
+                <strong id="resCF">--x</strong>
+            </div>
+            <div class="geo-stat" title="The angular FOV the lens provides on its natively designed format">
+                <span>Lens Native H-AFOV</span>
+                <strong id="resAfovNative">--°</strong>
+            </div>
+            <div class="geo-stat" title="The actual angular FOV hitting your specific sensor">
+                <span>Actual H-AFOV</span>
+                <strong id="resAfovActual">--°</strong>
+            </div>
+            <div class="geo-stat" title="The actual diagonal angular FOV on your sensor">
+                <span>Actual D-AFOV</span>
+                <strong id="resAfovD">--°</strong>
+            </div>
+        </div>
+
+        <div id="warnAlert" class="alert alert-warning"></div>
+        <div id="dangerAlert" class="alert alert-danger"></div>
+    </div>
+</div>
+
+<div class="physics-container" id="primer-equations">
+    <div class="physics-content">
+        <h3>Imaging System Mathematics</h3>
+        
+        <h4>Crop Factor & Lens Matching</h4>
+        <p>
+            When utilizing machine vision lenses, the <strong>Crop Factor</strong> is best understood as the ratio between the format the lens was <em>designed</em> for and the actual sensor you are using: <span class="formula-inline">CF = Lens Diagonal / Sensor Diagonal</span>. 
+            <br><br>
+            If you place a 2/3" lens on a 1/1.8" sensor, the sensor is smaller than the image circle the lens projects. It essentially "crops" into the center of the lens's native Field of View. The effective physical FOV is therefore: <span class="formula-inline">FOV<sub>Effective</sub> = FOV<sub>Native</sub> / Crop Factor</span> (calculated linearly along width/height/diagonal).
+            <br><br>
+            Conversely, placing a 1/1.8" lens on a 2/3" sensor will result in <strong>vignetting</strong>, where the lens's native image circle completely fails to cover the corners of the larger sensor format.
+        </p>
+
+        <h4>Angular Field of View (AFOV)</h4>
+        <p>
+            The <strong>Angular Field of View</strong> is the angle of the scene that the lens captures, radiating outward from the optical center. It is strictly dependent on the physical dimension of the sensor format and the focal length of the lens, completely independent of the working distance: <span class="formula-inline">AFOV = 2 × arctan(Dimension / (2 × FL))</span>.
+        </p>
+
+        <h4>Extracting Focal Length from AFOV</h4>
+        <p>
+            Lens manufacturers frequently list a lens's <strong>Native Angular Field of View</strong> instead of a hyper-precise Focal Length. If you know the AFOV specified for the lens's native designed format, the exact focal length can be reverse-calculated: <span class="formula-inline">FL = (Lens Width / 2) / tan(AFOV<sub>horiz</sub> / 2)</span>
+        </p>
+
+        <h4>Exact Field of View Equation</h4>
+        <p>
+            Many simple photography calculators use the generic approximation <span class="formula-inline">FOV ≈ Sensor × (WD / FL)</span>, which assumes the subject is essentially at infinity. However, for machine vision and macro applications, this calculator utilizes the exact thin-lens geometric derivation: <span class="formula-inline">FOV = Sensor × ((WD / FL) - 1)</span>. Because this precise equation inherently incorporates your specific sensor dimensions, it automatically bakes the "crop factor" into the result perfectly. 
+            <br><br>
+            <em>Note:</em> <strong>Working Distance (WD)</strong> in fundamental thin-lens equations is measured precisely from the lens's principal plane. In practical hardware setups, WD is commonly measured from the front edge of the lens barrel. For highly precise high-magnification applications, the physical offsets of the principal planes must be strictly accounted for.
+        </p>
+    </div>
+</div>
+
+<script>
+    const svgSun = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" /></svg>`;
+    const svgMoon = `<svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd" /></svg>`;
+
+    let solveMode = 'fov';
+
+    const formats = {
+        "1/4": {w: 3.2, h: 2.4},
+        "1/3": {w: 4.8, h: 3.6},
+        "1/2": {w: 6.4, h: 4.8},
+        "1/1.8": {w: 7.18, h: 5.32},
+        "2/3": {w: 8.8, h: 6.6},
+        "1": {w: 12.8, h: 9.6},
+        "4/3": {w: 17.3, h: 13.0},
+        "apsc": {w: 23.6, h: 15.6},
+        "ff": {w: 36.0, h: 24.0}
+    };
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        const isDark = html.getAttribute('data-theme') === 'dark';
+        html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        document.getElementById('themeIcon').innerHTML = !isDark ? svgSun : svgMoon;
+        calculate(); 
+    }
+
+    function updateSensor() {
+        const format = document.getElementById('sensorFormat').value;
+        const manualDiv = document.getElementById('sensorManual');
+        if (format !== 'custom') {
+            document.getElementById('sensorW').value = formats[format].w;
+            document.getElementById('sensorH').value = formats[format].h;
+            manualDiv.style.display = 'none';
+        } else {
+            manualDiv.style.display = 'flex';
+        }
+        calculate();
+    }
+
+    function updateLens() {
+        const format = document.getElementById('lensFormat').value;
+        const manualDiv = document.getElementById('lensManual');
+        if (format !== 'custom') {
+            document.getElementById('lensW').value = formats[format].w;
+            document.getElementById('lensH').value = formats[format].h;
+            manualDiv.style.display = 'none';
+        } else {
+            manualDiv.style.display = 'flex';
+        }
+        
+        if (document.getElementById('lensAfov').value !== '') {
+            deriveFlFromAfov();
+        } else {
+            calculate();
+        }
+    }
+
+    function deriveFlFromAfov() {
+        const afov = parseFloat(document.getElementById('lensAfov').value);
+        const lensW = parseFloat(document.getElementById('lensW').value);
+        if (afov > 0 && afov < 180 && lensW > 0) {
+            const rad = (afov / 2) * (Math.PI / 180);
+            const fl = (lensW / 2) / Math.tan(rad);
+            document.getElementById('inputFL').value = fl.toFixed(2);
+            calculate();
+        }
+    }
+
+    function clearAfovAndCalc() {
+        document.getElementById('lensAfov').value = '';
+        calculate();
+    }
+
+    function setSolveMode(mode) {
+        solveMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('btnSolve' + mode.toUpperCase()).classList.add('active');
+        
+        document.getElementById('inputFL').disabled = (mode === 'fl');
+        document.getElementById('inputWD').disabled = (mode === 'wd');
+        document.getElementById('inputFOV').disabled = (mode === 'fov');
+        
+        ['inputFL', 'inputWD', 'inputFOV'].forEach(id => {
+            const el = document.getElementById(id);
+            const label = document.querySelector(`label[for="${id}"]`);
+
+            if (el.disabled) {
+                el.classList.add('input-locked');
+                if(!label.innerText.includes('(Target)')) {
+                    label.innerText = label.innerText + ' (Target)';
+                    label.style.color = 'var(--primary)';
+                    label.style.fontWeight = '700';
+                }
+            } else {
+                el.classList.remove('input-locked');
+                label.innerText = label.innerText.replace(' (Target)', '');
+                label.style.color = 'var(--text)';
+                label.style.fontWeight = '500';
+            }
+        });
+        
+        document.getElementById('heroLabel').innerText = 
+            mode === 'fov' ? 'Effective Field of View (W)' :
+            mode === 'fl' ? 'Calculated Focal Length' : 'Calculated Working Distance';
+            
+        calculate();
+    }
+
+    function calculate() {
+        const sW = parseFloat(document.getElementById('sensorW').value) || 0;
+        const sH = parseFloat(document.getElementById('sensorH').value) || 0;
+        const lW = parseFloat(document.getElementById('lensW').value) || 0;
+        const lH = parseFloat(document.getElementById('lensH').value) || 0;
+        
+        let fl = parseFloat(document.getElementById('inputFL').value) || 0;
+        let wd = parseFloat(document.getElementById('inputWD').value) || 0;
+        let fov_w = parseFloat(document.getElementById('inputFOV').value) || 0;
+        
+        const showRef = document.getElementById('showRefObj').checked;
+        const refObj = showRef ? (parseFloat(document.getElementById('refObjSize').value) || 0) : 0;
+        
+        const warnAlert = document.getElementById('warnAlert');
+        const dangerAlert = document.getElementById('dangerAlert');
+        warnAlert.classList.remove('visible');
+        dangerAlert.classList.remove('visible');
+
+        const sDiag = Math.sqrt(sW*sW + sH*sH);
+        const lDiag = Math.sqrt(lW*lW + lH*lH);
+        
+        document.getElementById('sensorDiagDisplay').innerText = sDiag.toFixed(2) + ' mm';
+        document.getElementById('lensDiagDisplay').innerText = lDiag.toFixed(2) + ' mm';
+        
+        if (sDiag > lDiag + 0.1) {
+            dangerAlert.innerHTML = `<strong>Vignetting Warning:</strong> Your Camera Sensor (${sDiag.toFixed(1)}mm diag) is physically larger than the Lens's native image circle (${lDiag.toFixed(1)}mm diag). Heavy corner shadowing or clipping will occur.`;
+            dangerAlert.classList.add('visible');
+        }
+
+        if (solveMode === 'fov') {
+            if (wd <= fl && fl > 0) {
+                warnAlert.innerText = "Working Distance must be greater than Focal Length for a real image.";
+                warnAlert.classList.add('visible');
+                fov_w = 0;
+            } else {
+                fov_w = sW * ((wd / fl) - 1);
+            }
+            if (fov_w < 0) fov_w = 0;
+            document.getElementById('inputFOV').value = fov_w.toFixed(1);
+        } else if (solveMode === 'fl') {
+            fl = wd / ((fov_w / sW) + 1);
+            document.getElementById('inputFL').value = fl.toFixed(2);
+        } else if (solveMode === 'wd') {
+            wd = fl * ((fov_w / sW) + 1);
+            document.getElementById('inputWD').value = wd.toFixed(1);
+        }
+        
+        const fov_h = sW > 0 ? sH * (fov_w / sW) : 0;
+        document.getElementById('fovHeightHelper').innerText = `Height: ${fov_h.toFixed(1)} mm`;
+        
+        let heroVal = 0;
+        if (solveMode === 'fov') heroVal = fov_w;
+        if (solveMode === 'fl') heroVal = fl;
+        if (solveMode === 'wd') heroVal = wd;
+        
+        document.getElementById('heroValue').innerText = heroVal > 0 ? `${heroVal.toFixed(1)} mm` : 'Invalid';
+        const impVal = heroVal / 25.4;
+        document.getElementById('heroValueImp').innerText = heroVal > 0 ? `${impVal.toFixed(2)} in` : '';
+        
+        const native_fov_w = lW > 0 && fl > 0 && wd > fl ? lW * ((wd / fl) - 1) : 0;
+        document.getElementById('lensNativeFovHelper').innerText = `Native Lens FOV: ${native_fov_w > 0 ? native_fov_w.toFixed(1) : '--'} mm`;
+
+        const cf = lDiag / sDiag;
+        document.getElementById('resCF').innerText = isFinite(cf) && sDiag > 0 ? cf.toFixed(2) + 'x' : '--';
+        
+        const afov_native = fl > 0 ? 2 * Math.atan(lW / (2 * fl)) * 180 / Math.PI : 0;
+        const afov_actual_w = fl > 0 ? 2 * Math.atan(sW / (2 * fl)) * 180 / Math.PI : 0;
+        const afov_actual_d = fl > 0 ? 2 * Math.atan(sDiag / (2 * fl)) * 180 / Math.PI : 0;
+        
+        document.getElementById('resAfovNative').innerText = afov_native.toFixed(1) + '°';
+        document.getElementById('resAfovActual').innerText = afov_actual_w.toFixed(1) + '°';
+        document.getElementById('resAfovD').innerText = afov_actual_d.toFixed(1) + '°';
+        
+        let fov_actual_d = 0;
+        let fov_native_d = 0;
+        if (wd > fl && fl > 0) {
+            fov_actual_d = sDiag * ((wd / fl) - 1);
+            fov_native_d = lDiag * ((wd / fl) - 1);
+        }
+
+        drawCanvas(sDiag, lDiag, fov_actual_d, fov_native_d, fl, wd, refObj);
+    }
+
+    function drawCanvas(sDiag, lDiag, fov_actual_d, fov_native_d, fl, wd, refObj) {
+        const canvas = document.getElementById('geoCanvas');
+        const ctx = canvas.getContext('2d');
+        const rect = canvas.parentElement.getBoundingClientRect();
+        
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        
+        ctx.scale(dpr, dpr);
+        const width = rect.width;
+        const height = rect.height;
+        
+        ctx.clearRect(0, 0, width, height);
+        
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const colText = isDark ? '#a3a3a3' : '#6b7280';
+        const colPrimary = isDark ? '#60a5fa' : '#2563eb';
+        const colSecondary = isDark ? '#a78bfa' : '#8b5cf6'; 
+        const colLine = isDark ? '#525252' : '#d1d5db';
+        const colRef = isDark ? '#fbbf24' : '#f59e0b';
+        
+        const centerY = height / 2;
+        const paddingX = 60;
+        
+        const xSensor = paddingX;
+        const xObj = width - paddingX;
+
+        let lensRatio = (fl > 0 && wd > 0) ? (fl / wd) : 0;
+        lensRatio = Math.max(0.05, Math.min(0.5, lensRatio)); 
+        let xLens = xSensor + (xObj - xSensor) * (lensRatio * 1.5);
+        xLens = Math.max(xSensor + 45, Math.min(xSensor + (xObj - xSensor) * 0.45, xLens));
+        
+        function getDrawH(val) {
+            if (sDiag <= 0 || val <= 0) return 0;
+            const r = val / sDiag;
+            let h = r <= 1 ? 40 * r : 40 * (1 + 2.5 * Math.log10(r));
+            return Math.min(h, height * 0.75);
+        }
+
+        const drawSD = getDrawH(sDiag);
+        const drawLD = getDrawH(lDiag);
+        const objDrawHD = getDrawH(fov_actual_d);
+        const objDrawLD = getDrawH(fov_native_d);
+
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(10, centerY);
+        ctx.lineTo(width - 10, centerY);
+        ctx.strokeStyle = colLine;
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        ctx.beginPath();
+        ctx.moveTo(xSensor, centerY - drawLD/2);
+        ctx.lineTo(xLens, centerY);
+        ctx.lineTo(xObj, centerY + objDrawLD/2);
+        ctx.moveTo(xSensor, centerY + drawLD/2);
+        ctx.lineTo(xLens, centerY);
+        ctx.lineTo(xObj, centerY - objDrawLD/2);
+        ctx.strokeStyle = isDark ? 'rgba(167, 139, 250, 0.3)' : 'rgba(139, 92, 246, 0.3)';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(xSensor - 2, centerY - drawLD/2);
+        ctx.lineTo(xSensor - 2, centerY + drawLD/2);
+        ctx.strokeStyle = colSecondary;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(xSensor, centerY - drawSD/2);
+        ctx.lineTo(xLens, centerY);
+        ctx.lineTo(xObj, centerY + objDrawHD/2);
+        ctx.moveTo(xSensor, centerY + drawSD/2);
+        ctx.lineTo(xLens, centerY);
+        ctx.lineTo(xObj, centerY - objDrawHD/2);
+        ctx.strokeStyle = colLine;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.fillStyle = colPrimary;
+        ctx.fillRect(xSensor - 4, centerY - drawSD/2, 8, drawSD);
+        
+        ctx.beginPath();
+        ctx.ellipse(xLens, centerY, 8, 45, 0, 0, 2*Math.PI);
+        ctx.fillStyle = isDark ? 'rgba(96, 165, 250, 0.2)' : 'rgba(37, 99, 235, 0.2)';
+        ctx.fill();
+        ctx.strokeStyle = colPrimary;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.lineWidth = 1;
+        
+        ctx.beginPath();
+        ctx.moveTo(xObj, centerY - objDrawHD/2);
+        ctx.lineTo(xObj, centerY + objDrawHD/2);
+        ctx.strokeStyle = isDark ? '#34d399' : '#10b981';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(xObj, centerY - objDrawLD/2);
+        ctx.lineTo(xObj, centerY - objDrawHD/2); 
+        ctx.moveTo(xObj, centerY + objDrawLD/2);
+        ctx.lineTo(xObj, centerY + objDrawHD/2); 
+        ctx.strokeStyle = isDark ? 'rgba(52, 211, 153, 0.3)' : 'rgba(16, 185, 129, 0.3)';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.lineWidth = 1;
+        
+        if (refObj > 0 && fov_actual_d > 0) {
+            const refDrawH = objDrawHD * (refObj / fov_actual_d);
+            ctx.fillStyle = colRef;
+            ctx.fillRect(xObj - 8, centerY - refDrawH/2, 8, refDrawH);
+            ctx.strokeStyle = isDark ? '#451a03' : '#fffbeb';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(xObj - 8, centerY - refDrawH/2, 8, refDrawH);
+        }
+
+        ctx.fillStyle = colText;
+        ctx.font = "12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Sensor Plane", xSensor, centerY - (Math.max(drawLD, drawSD)/2) - 15);
+        ctx.fillText("Optics", xLens, centerY - 55);
+        ctx.fillText("Object Plane", xObj, centerY - (Math.max(objDrawLD, objDrawHD)/2) - 15);
+        
+        const legendX = 15;
+        let legendY = 15;
+        ctx.textAlign = "left";
+        ctx.font = "11px sans-serif";
+
+        function drawLegendItem(color, text, type='rect') {
+            ctx.fillStyle = color;
+            if (type === 'rect') {
+                ctx.fillRect(legendX, legendY + 2, 12, 8);
+            }
+            ctx.fillStyle = colText;
+            ctx.fillText(text, legendX + 18, legendY + 10);
+            legendY += 16;
+        }
+
+        drawLegendItem(colSecondary, "Lens Native Format");
+        drawLegendItem(colPrimary, "Actual Sensor");
+        if (refObj > 0) {
+            drawLegendItem(colRef, "Reference Object");
+        }
+
+        const bracketY = height - 25; 
+        drawBracket(ctx, xSensor, xLens, bracketY, "FL", colText);
+        drawBracket(ctx, xLens, xObj, bracketY, "WD", colText);
+    }
+
+    function drawBracket(ctx, x1, x2, y, text, color) {
+        ctx.beginPath();
+        ctx.moveTo(x1, y - 5);
+        ctx.lineTo(x1, y);
+        ctx.lineTo(x2, y);
+        ctx.lineTo(x2, y - 5);
+        ctx.strokeStyle = color;
+        ctx.stroke();
+        ctx.fillStyle = color;
+        ctx.textAlign = "center";
+        ctx.fillText(text, (x1+x2)/2, y + 15);
+    }
+
+    window.onload = function() {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.getElementById('themeIcon').innerHTML = svgSun;
+        } else {
+            document.getElementById('themeIcon').innerHTML = svgMoon;
+        }
+        updateLens(); 
+        updateSensor();
+        setSolveMode('fov');
+    };
+
+    window.addEventListener('resize', calculate);
+</script>
+</body>
+</html>
